@@ -1,55 +1,34 @@
 pipeline {
     agent any
-    environment {
-        name = "partap"
-    }
-    parameters {
-        string(name: 'person', defaultValue: 'sourav sharma', description: 'who are you?')
-        booleanParam(name: 'isMale', defaultValue: true, description: '')
-        choice(name: 'City', choices: ['jaipur','Mumbai','Pune'], description: '')
+    tools {
+        maven 'Maven'
     }
 
     stages {
-        stage('Run a command') {
+        stage('build') {
             steps {
-                sh '''
-                ls
-                pwd
-                '''
+                //mvn test
+                sh 'mvn test'
             }
         }
-        stage('Environment variables') {
-            environment {
-                username = "singh"
-            }
+         stage('test') {
             steps {
-                sh 'echo "${BUILD_ID}"'
-                sh 'echo "${name}"'
-                sh 'echo "${username}"'
-                sh 'echo "${person}"'
+                //mvn package
+                sh 'mvn package'
             }
         }
-        stage('deploy on Testing machine') {
+         stage('deploy on test') {
             steps {
-                sleep 1
+                //deploy on testing machine
+                deploy adapters: [tomcat9(credentialsId: 'tomact9', path: '', url: 'http://13.127.96.135:8080')], contextPath: '/webapp', war: '**/.war'
+            }
+        }
+         stage('deploy on prod') {
+            steps {
+                //deploy on prod machine
+                deploy adapters: [tomcat9(credentialsId: 'tomact9', path: '', url: 'http://13.126.30.254:8080')], contextPath: '/webapp', war: '**/.war'
             }
         }
         
-        stage('Deploy on Prod machine') {
-            steps {
-                echo 'deploy on prod machine'
-            }
-        }
-    }
-    post{
-        always {
-            echo 'i will always say Hello again'
-        }
-        failure {
-            echo 'i will run on failure'
-        }
-        success {
-            echo 'i will run on success'
-        }
     }
 }
